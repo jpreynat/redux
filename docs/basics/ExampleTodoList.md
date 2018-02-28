@@ -1,6 +1,6 @@
 # Example: Todo List
 
-This is the complete source code of the tiny todo app we built during the [basics tutorial](./README.md).
+This is the complete source code of the tiny todo app we built during the [basics tutorial](./README.md). This code is also in [our repository of examples](https://github.com/reactjs/redux/tree/master/examples/todos/src) and can be [run in your browser via CodeSandbox](https://codesandbox.io/s/github/reactjs/redux/tree/master/examples/todos).
 
 ## Entry Point
 
@@ -51,6 +51,12 @@ export const toggleTodo = id => {
     id
   }
 }
+
+export const VisibilityFilters = {
+  SHOW_ALL: 'SHOW_ALL',
+  SHOW_COMPLETED: 'SHOW_COMPLETED',
+  SHOW_ACTIVE: 'SHOW_ACTIVE'
+}
 ```
 
 ## Reducers
@@ -71,7 +77,7 @@ const todos = (state = [], action) => {
       ]
     case 'TOGGLE_TODO':
       return state.map(todo =>
-        (todo.id === action.id) 
+        (todo.id === action.id)
           ? {...todo, completed: !todo.completed}
           : todo
       )
@@ -124,7 +130,7 @@ import PropTypes from 'prop-types'
 const Todo = ({ onClick, completed, text }) => (
   <li
     onClick={onClick}
-    style={{
+    style={ {
       textDecoration: completed ? 'line-through' : 'none'
     }}
   >
@@ -182,7 +188,7 @@ const Link = ({ active, children, onClick }) => {
 
   return (
     <a
-      href="#"
+      href=""
       onClick={e => {
         e.preventDefault()
         onClick()
@@ -207,20 +213,21 @@ export default Link
 ```js
 import React from 'react'
 import FilterLink from '../containers/FilterLink'
+import { VisibilityFilters } from '../actions'
 
 const Footer = () => (
   <p>
     Show:
     {' '}
-    <FilterLink filter="SHOW_ALL">
+    <FilterLink filter={VisibilityFilters.SHOW_ALL}>
       All
     </FilterLink>
     {', '}
-    <FilterLink filter="SHOW_ACTIVE">
+    <FilterLink filter={VisibilityFilters.SHOW_ACTIVE}>
       Active
     </FilterLink>
     {', '}
-    <FilterLink filter="SHOW_COMPLETED">
+    <FilterLink filter={VisibilityFilters.SHOW_COMPLETED}>
       Completed
     </FilterLink>
   </p>
@@ -259,12 +266,13 @@ import TodoList from '../components/TodoList'
 
 const getVisibleTodos = (todos, filter) => {
   switch (filter) {
-    case 'SHOW_ALL':
-      return todos
     case 'SHOW_COMPLETED':
       return todos.filter(t => t.completed)
     case 'SHOW_ACTIVE':
       return todos.filter(t => !t.completed)
+    case 'SHOW_ALL':
+    default:
+      return todos
   }
 }
 

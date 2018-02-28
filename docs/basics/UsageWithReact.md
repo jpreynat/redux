@@ -59,7 +59,7 @@ Finished reading the article? Let's recount their differences:
     </tbody>
 </table>
 
-Most of the components we'll write will be presentational, but we'll need to generate a few container components to connect them to the Redux store. This and the design brief below do not imply container components must be near the top of the component tree. If a container component becomes too complex (i.e. it has heavily nested presentional components with countless callbacks being passed down), introduce another container within the component tree as noted in the [FAQ](../faq/ReactRedux.md#react-multiple-components).
+Most of the components we'll write will be presentational, but we'll need to generate a few container components to connect them to the Redux store. This and the design brief below do not imply container components must be near the top of the component tree. If a container component becomes too complex (i.e. it has heavily nested presentational components with countless callbacks being passed down), introduce another container within the component tree as noted in the [FAQ](../faq/ReactRedux.md#react-multiple-components).
 
 Technically you could write the container components by hand using [`store.subscribe()`](../api/Store.md#subscribe). We don't advise you to do this because React Redux makes many performance optimizations that are hard to do by hand. For this reason, rather than write container components, we will generate them using the [`connect()`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options) function provided by React Redux, as you will see below.
 
@@ -78,10 +78,10 @@ I see the following presentational components and their props emerge from this b
   - `onTodoClick(id: number)` is a callback to invoke when a todo is clicked.
 * **`Todo`** is a single todo item.
   - `text: string` is the text to show.
-  - `completed: boolean` is whether todo should appear crossed out.
-  - `onClick()` is a callback to invoke when a todo is clicked.
+  - `completed: boolean` is whether the todo should appear crossed out.
+  - `onClick()` is a callback to invoke when the todo is clicked.
 * **`Link`** is a link with a callback.
-  - `onClick()` is a callback to invoke when link is clicked.
+  - `onClick()` is a callback to invoke when the link is clicked.
 * **`Footer`** is where we let the user change currently visible todos.
 * **`App`** is the root component that renders everything else.
 
@@ -97,7 +97,7 @@ We will also need some container components to connect the presentational compon
 
 ### Designing Other Components
 
-Sometimes it's hard to tell if some component should be a presentational component or a container. For example, sometimes form and function are really coupled together, such as in case of this tiny component:
+Sometimes it's hard to tell if some component should be a presentational component or a container. For example, sometimes form and function are really coupled together, such as in the case of this tiny component:
 
 * **`AddTodo`** is an input field with an “Add” button
 
@@ -120,7 +120,7 @@ import PropTypes from 'prop-types'
 const Todo = ({ onClick, completed, text }) => (
   <li
     onClick={onClick}
-    style={{
+    style={ {
       textDecoration: completed ? 'line-through' : 'none'
     }}
   >
@@ -179,7 +179,7 @@ const Link = ({ active, children, onClick }) => {
 
   return (
     <a
-      href="#"
+      href=""
       onClick={e => {
         e.preventDefault()
         onClick()
@@ -204,20 +204,21 @@ export default Link
 ```js
 import React from 'react'
 import FilterLink from '../containers/FilterLink'
+import { VisibilityFilters } from '../actions'
 
 const Footer = () => (
   <p>
     Show:
     {' '}
-    <FilterLink filter="SHOW_ALL">
+    <FilterLink filter={VisibilityFilters.SHOW_ALL}>
       All
     </FilterLink>
     {', '}
-    <FilterLink filter="SHOW_ACTIVE">
+    <FilterLink filter={VisibilityFilters.SHOW_ACTIVE}>
       Active
     </FilterLink>
     {', '}
-    <FilterLink filter="SHOW_COMPLETED">
+    <FilterLink filter={VisibilityFilters.SHOW_COMPLETED}>
       Completed
     </FilterLink>
   </p>
@@ -235,12 +236,13 @@ To use `connect()`, you need to define a special function called `mapStateToProp
 ```js
 const getVisibleTodos = (todos, filter) => {
   switch (filter) {
-    case 'SHOW_ALL':
-      return todos
     case 'SHOW_COMPLETED':
       return todos.filter(t => t.completed)
     case 'SHOW_ACTIVE':
       return todos.filter(t => !t.completed)
+    case 'SHOW_ALL':
+    default:
+      return todos
   }
 }
 
@@ -353,7 +355,7 @@ export default VisibleTodoList
 
 #### `containers/AddTodo.js`
 
-Recall as [mentioned previously](#designing-other-components), both the presentation and logic for the `AddTodo` component are mixed into a single definition. 
+Recall as [mentioned previously](#designing-other-components), both the presentation and logic for the `AddTodo` component are mixed into a single definition.
 
 ```js
 import React from 'react'
@@ -392,7 +394,7 @@ AddTodo = connect()(AddTodo)
 export default AddTodo
 ```
 
-If you are unfamiliar with the `ref` attribute, please read this [documentation](https://facebook.github.io/react/docs/refs-and-the-dom.html) to familiarize yourself with the recommended use of this attribute. 
+If you are unfamiliar with the `ref` attribute, please read this [documentation](https://facebook.github.io/react/docs/refs-and-the-dom.html) to familiarize yourself with the recommended use of this attribute.
 
 ### Tying the containers together within a component
 #### `components/App.js`

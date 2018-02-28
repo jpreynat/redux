@@ -17,11 +17,11 @@ To use it together with [Babel](http://babeljs.io), you will need to install `ba
 npm install --save-dev babel-jest
 ```
 
-and configure it to use ES2015 features in `.babelrc`:
+and configure it to use [babel-preset-env](https://github.com/babel/babel/tree/master/packages/babel-preset-env) features in `.babelrc`:
 
 ```js
 {
-  "presets": ["es2015"]
+   "presets": ["@babel/preset-env"]
 }
 ```
 
@@ -75,12 +75,12 @@ describe('actions', () => {
 
 ### Async Action Creators
 
-For async action creators using [Redux Thunk](https://github.com/gaearon/redux-thunk) or other middleware, it's best to completely mock the Redux store for tests. You can apply the middleware to a mock store using [redux-mock-store](https://github.com/arnaudbenard/redux-mock-store). You can also use [nock](https://github.com/pgte/nock) to mock the HTTP requests.
+For async action creators using [Redux Thunk](https://github.com/gaearon/redux-thunk) or other middleware, it's best to completely mock the Redux store for tests. You can apply the middleware to a mock store using [redux-mock-store](https://github.com/arnaudbenard/redux-mock-store). You can also use [fetch-mock](http://www.wheresrhys.co.uk/fetch-mock/) to mock the HTTP requests.
 
 #### Example
 
 ```js
-import fetch from 'isomorphic-fetch'
+import 'cross-fetch/polyfill'
 
 function fetchTodosRequest() {
   return {
@@ -107,7 +107,7 @@ export function fetchTodos() {
     dispatch(fetchTodosRequest())
     return fetch('http://example.com/todos')
       .then(res => res.json())
-      .then(json => dispatch(fetchTodosSuccess(json.body)))
+      .then(body => dispatch(fetchTodosSuccess(body)))
       .catch(ex => dispatch(fetchTodosFailure(ex)))
   }
 }
@@ -120,7 +120,7 @@ import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import * as actions from '../../actions/TodoActions'
 import * as types from '../../constants/ActionTypes'
-import nock from 'nock'
+import fetchMock from 'fetch-mock'
 import expect from 'expect' // You can use any testing library
 
 const middlewares = [thunk]
@@ -128,13 +128,14 @@ const mockStore = configureMockStore(middlewares)
 
 describe('async actions', () => {
   afterEach(() => {
-    nock.cleanAll()
+    fetchMock.reset()
+    fetchMock.restore()
   })
 
   it('creates FETCH_TODOS_SUCCESS when fetching todos has been done', () => {
-    nock('http://example.com/')
-      .get('/todos')
-      .reply(200, { body: { todos: ['do something'] } })
+    fetchMock
+      .getOnce('/todos', { body: { todos: ['do something'] }, headers: { 'content-type': 'application/json' } })
+
 
     const expectedActions = [
       { type: types.FETCH_TODOS_REQUEST },
@@ -255,6 +256,12 @@ First, we will install [Enzyme](http://airbnb.io/enzyme/). Enzyme uses the [Reac
 npm install --save-dev enzyme
 ```
 
+We will also need to install Enzyme adapter for our version of React. Enzyme has adapters that provide compatibility with `React 16.x`, `React 15.x`, `React 0.14.x` and `React 0.13.x`. If you are using React 16 you can run:
+
+```
+npm install --save-dev enzyme-adapter-react-16
+```
+
 To test the components we make a `setup()` helper that passes the stubbed callbacks as props and renders the component with [shallow rendering](http://airbnb.io/enzyme/docs/api/shallow.html). This lets individual tests assert on whether the callbacks were called when expected.
 
 #### Example
@@ -296,8 +303,11 @@ can be tested like:
 
 ```js
 import React from 'react'
-import { mount } from 'enzyme'
+import Enzyme, { mount } from 'enzyme'
+import Adapter from 'enzyme-adapter-react-16';
 import Header from '../../components/Header'
+
+Enzyme.configure({ adapter: new Adapter() });
 
 function setup() {
   const props = {
@@ -436,7 +446,7 @@ const create = () => {
 We test that our middleware is calling the `getState`, `dispatch`, and `next` functions at the right time.
 
 ```js
-it(`passes through non-function action`, () => {
+it('passes through non-function action', () => {
   const { next, invoke } = create()
   const action = {type: 'TEST'}
   invoke(action)
